@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>미국주식 복리 계산기 | 포트폴리오 리스크·DCA·하락 회복 계산</title>
+  <meta name="description" content="미국주식 투자자를 위한 무료 교육용 계산기입니다. DCA 복리, 하락장 회복률, 포트폴리오 스트레스 테스트, 레버리지 ETF 위험, 은퇴 목표를 사용자가 입력한 가정으로 계산해보세요.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#0f2747">
+  <link rel="canonical" href="https://example.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:site_name" content="미국주식 리스크 계산기">
+  <meta property="og:title" content="미국주식 복리 계산기 | 포트폴리오 리스크·DCA·하락 회복 계산">
+  <meta property="og:description" content="복리, 하락장 회복률, 포트폴리오 위험과 은퇴 목표를 사용자가 입력한 가정으로 계산하는 교육용 도구입니다.">
+  <meta property="og:url" content="https://example.com/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="미국주식 복리·포트폴리오 리스크 계산기">
+  <meta name="twitter:description" content="DCA 복리, 하락 회복, 스트레스 테스트와 FIRE 목표를 한 곳에서 계산하세요.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "name": "미국주식 리스크 계산기",
+        "url": "https://example.com/",
+        "description": "미국주식 투자자를 위한 복리, 하락장, 포트폴리오 리스크 교육용 계산기",
+        "inLanguage": "ko-KR"
+      },
+      {
+        "@type": "WebApplication",
+        "name": "미국주식 리스크 계산기",
+        "url": "https://example.com/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "모든 운영체제",
+        "browserRequirements": "JavaScript를 지원하는 최신 웹 브라우저",
+        "isAccessibleForFree": true,
+        "description": "사용자가 직접 입력한 가정으로 투자 위험 시나리오를 계산하는 무료 교육용 웹 도구",
+        "inLanguage": "ko-KR"
+      }
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+  <header class="site-header">
+    <div class="container header-main">
+      <div>
+        <a class="brand" href="#top">미국주식 리스크 계산기</a>
+        <p class="brand-subtitle">복리, 하락장, 포트폴리오 리스크를 한 번에 계산하는 교육용 투자 도구</p>
+      </div>
+      <div class="global-controls" aria-label="공통 표시 및 저장 설정">
+        <label>결과 통화
+          <select id="display-currency" data-save>
+            <option value="USD">달러 (USD)</option>
+            <option value="KRW">원화 (KRW)</option>
+          </select>
+        </label>
+        <label>환율 (1달러)
+          <input id="exchange-rate" type="number" min="1" value="1400" inputmode="decimal" data-save>
+        </label>
+        <div class="storage-actions">
+          <button class="button button-small" id="save-all" type="button">입력값 저장</button>
+          <button class="button button-small button-ghost" id="load-all" type="button">불러오기</button>
+          <button class="button button-small button-ghost" id="reset-all" type="button">전체 초기화</button>
+        </div>
+        <p id="storage-status" class="storage-status" aria-live="polite">저장 기능은 브라우저 localStorage만 사용합니다.</p>
+      </div>
+    </div>
+    <nav class="tool-nav" aria-label="계산기 메뉴">
+      <div class="container tool-nav-scroll">
+        <a href="#dca">DCA 복리</a>
+        <a href="#drawdown">하락 회복</a>
+        <a href="#stress">스트레스 테스트</a>
+        <a href="#custom">커스텀 시나리오</a>
+        <a href="#risk-analyzer">위험 분석</a>
+        <a href="#leverage">레버리지 ETF</a>
+        <a href="#rebalancing">리밸런싱</a>
+        <a href="#fire">은퇴/FIRE</a>
+        <a href="#risk-profile">위험성향</a>
+        <a href="#methodology">방법론</a>
+        <a href="#disclaimer">면책문구</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top">
+      <div class="container hero-grid">
+        <div>
+          <p class="kicker">입력한 가정을 숫자로 검증하는 금융 도구</p>
+          <h1>미국주식 투자자를 위한 포트폴리오 리스크 계산기</h1>
+          <p class="hero-lead">월 적립식 투자, 하락장 회복률, 레버리지 ETF 위험, 은퇴 목표, 포트폴리오 스트레스 테스트를 사용자가 입력한 가정으로 계산합니다.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#dca">복리 계산 시작하기</a>
+            <a class="button button-secondary" href="#stress">포트폴리오 스트레스 테스트</a>
+          </div>
+          <p class="hero-notice">본 사이트는 교육용 계산 도구이며 투자 자문, 특정 증권의 매수·매도 추천, 수익 보장을 제공하지 않습니다.</p>
+        </div>
+        <div class="hero-dashboard" aria-label="사이트 기능 요약">
+          <div class="hero-stat"><span>9개</span><strong>리스크 계산 도구</strong></div>
+          <div class="hero-stat"><span>0개</span><strong>외부 데이터 전송</strong></div>
+          <div class="hero-stat"><span>3가지</span><strong>교육용 포트폴리오 예시</strong></div>
+          <div class="mini-chart" aria-hidden="true"><i style="height:34%"></i><i style="height:48%"></i><i style="height:43%"></i><i style="height:67%"></i><i style="height:78%"></i><i style="height:91%"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="dca" aria-labelledby="dca-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">01</p><div><h2 id="dca-title">DCA 복리 시뮬레이터</h2><p>초기 투자금과 매월 적립하는 금액이 일정한 수익률 가정 아래에서 어떻게 누적되는지 월복리로 계산합니다. 투자금 증가율과 특정 시점의 추가 투자금도 반영하며, 명목 금액뿐 아니라 물가상승률을 적용한 실질 가치도 함께 비교합니다. 실제 시장 수익률은 일정하지 않으므로 장기 계획의 범위를 살피는 용도로 사용하세요.</p></div></div>
+        <div class="calculator-card">
+          <form class="input-panel" id="dca-form">
+            <div class="form-grid">
+              <label>초기 투자금 (USD)<input id="dca-initial" type="number" min="0" value="10000" data-save></label>
+              <label>월 투자금 (USD)<input id="dca-monthly" type="number" min="0" value="500" data-save></label>
+              <label>투자 기간 (년)<input id="dca-years" type="number" min="1" max="60" value="20" data-save></label>
+              <label>연평균 수익률 가정 (%)<input id="dca-return" type="number" min="-99" max="100" step="0.1" value="7" data-save></label>
+              <label>연 물가상승률 가정 (%)<input id="dca-inflation" type="number" min="0" max="30" step="0.1" value="2.5" data-save></label>
+              <label>매년 투자금 증가율 (%)<input id="dca-increase" type="number" min="0" max="100" step="0.1" value="2" data-save></label>
+              <label>낙폭 발생 시 추가 투자금 (USD)<input id="dca-extra" type="number" min="0" value="0" data-save></label>
+              <label>추가 투자 시점 (년차)<input id="dca-extra-year" type="number" min="1" max="60" value="5" data-save></label>
+            </div>
+            <div class="form-actions"><button class="button button-small" type="button" data-example="dca">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div>
+          </form>
+          <div class="result-panel" aria-live="polite">
+            <div class="metric-grid four"><div class="metric"><span>총 투자원금</span><strong id="dca-principal">-</strong></div><div class="metric"><span>최종 시나리오 금액</span><strong id="dca-final">-</strong></div><div class="metric"><span>투자 수익</span><strong id="dca-profit">-</strong></div><div class="metric"><span>실질 가치</span><strong id="dca-real">-</strong></div></div>
+            <div id="dca-bars" class="ratio-bars"></div>
+            <div class="table-wrap"><table><thead><tr><th>연차</th><th>누적 원금</th><th>시나리오 금액</th><th>실질 가치</th></tr></thead><tbody id="dca-table"></tbody></table></div>
+            <p class="result-note">이 결과는 사용자가 입력한 수익률 가정에 따른 단순 시뮬레이션입니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section alt" id="drawdown" aria-labelledby="drawdown-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">02</p><div><h2 id="drawdown-title">하락 회복 계산기</h2><p>같은 하락률과 상승률은 서로 상쇄되지 않습니다. 이 도구는 포트폴리오가 하락한 뒤 원래 금액을 회복하려면 얼마나 상승해야 하는지 계산하고, 추가 투자금이 회복 기준에 미치는 영향을 보여줍니다. 큰 낙폭일수록 필요한 회복률이 비대칭적으로 커지는 구조를 이해하는 데 목적이 있습니다.</p></div></div>
+        <div class="calculator-card">
+          <form class="input-panel" id="drawdown-form">
+            <div class="form-grid two">
+              <label>현재 포트폴리오 금액 (USD)<input id="dd-current" type="number" min="0" value="100000" data-save></label>
+              <label>하락률 (%)<input id="dd-rate" type="number" min="0" max="99.9" step="0.1" value="30" data-save></label>
+              <label>추가 투자금 (USD)<input id="dd-extra" type="number" min="0" value="10000" data-save></label>
+              <label>회복 기준<select id="dd-target" data-save><option value="principal">하락 전 원금</option><option value="custom">하락 후 금액 대비 목표 상승률</option></select></label>
+              <label id="dd-custom-wrap" hidden>목표 상승률 (%)<input id="dd-custom" type="number" min="0" value="20" data-save></label>
+            </div>
+            <div class="form-actions"><button class="button button-small" type="button" data-example="drawdown">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div>
+          </form>
+          <div class="result-panel" aria-live="polite">
+            <div class="metric-grid four"><div class="metric"><span>하락 후 금액</span><strong id="dd-after">-</strong></div><div class="metric"><span>손실 금액</span><strong id="dd-loss">-</strong></div><div class="metric"><span>원금 회복 필요 상승률</span><strong id="dd-recovery">-</strong></div><div class="metric"><span>추가 투자 후 필요 상승률</span><strong id="dd-recovery-extra">-</strong></div></div>
+            <p id="dd-target-result" class="interpretation"></p>
+            <div class="table-wrap"><table><thead><tr><th>하락률</th><th>하락 후 금액</th><th>손실</th><th>원금 회복 필요 상승률</th></tr></thead><tbody id="dd-table"></tbody></table></div>
+            <p class="result-note">하락률이 커질수록 원금 회복에 필요한 상승률은 비대칭적으로 커집니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="stress" aria-labelledby="stress-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">03</p><div><h2 id="stress-title">포트폴리오 스트레스 테스트</h2><p>보유 수량이나 실시간 시세 대신 현재 보유 금액과 자산군을 입력해 충격 시나리오를 적용합니다. 기본 충격률은 비교를 위한 교육용 예시이며 각 행에서 직접 수정할 수 있습니다. 종목별 손실 기여도와 자산군 노출도를 함께 확인해 특정 자산이나 섹터 의존도가 어디에서 발생하는지 살펴보세요.</p></div></div>
+        <div class="wide-card">
+          <div class="toolbar wrap">
+            <label>충격 시나리오<select id="stress-scenario" data-save></select></label>
+            <button class="button button-small" id="add-portfolio-row" type="button">자산 행 추가</button>
+            <button class="button button-small button-ghost" id="reset-portfolio" type="button">초기화</button>
+            <button class="button button-small button-ghost" type="button" data-portfolio-example="stable">안정형 교육 예시</button>
+            <button class="button button-small button-ghost" type="button" data-portfolio-example="growth">성장형 교육 예시</button>
+            <button class="button button-small button-ghost" type="button" data-portfolio-example="leverage">고위험 레버리지 교육 예시</button>
+          </div>
+          <div class="table-wrap input-table-wrap"><table class="input-table"><thead><tr><th>티커/이름</th><th>보유 금액 (USD)</th><th>자산군</th><th>충격률 (%)</th><th><span class="sr-only">행 삭제</span></th></tr></thead><tbody id="portfolio-body"></tbody></table></div>
+          <p class="field-hint">예시는 기능 설명을 위한 가상 구성이며 특정 포트폴리오를 권유하지 않습니다. 충격률은 선택한 시나리오에 따라 자동 입력된 뒤 수정할 수 있습니다.</p>
+          <div id="stress-warning" class="inline-warning" aria-live="polite"></div>
+          <div class="metric-grid four"><div class="metric"><span>총 포트폴리오 금액</span><strong id="stress-total">-</strong></div><div class="metric"><span>시나리오 후 금액</span><strong id="stress-after">-</strong></div><div class="metric"><span>시나리오 손실액</span><strong id="stress-loss">-</strong></div><div class="metric"><span>포트폴리오 하락률</span><strong id="stress-rate">-</strong></div></div>
+          <div class="split-results"><div><h3>자산별 결과</h3><div class="table-wrap"><table><thead><tr><th>자산</th><th>비중</th><th>충격률</th><th>시나리오 후 금액</th><th>손실 기여도</th></tr></thead><tbody id="stress-result-body"></tbody></table></div></div><div><h3>자산군별 노출도</h3><div id="stress-exposure" class="bar-list"></div></div></div>
+          <p id="stress-interpretation" class="interpretation"></p>
+          <p class="result-note">이 기능은 사용자가 선택한 충격률을 적용하는 스트레스 테스트입니다. 실제 시장 결과를 예측하지 않습니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section alt" id="custom" aria-labelledby="custom-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">04</p><div><h2 id="custom-title">커스텀 시나리오 빌더</h2><p>금리, 경기, 유동성 또는 특정 산업 충격에 대한 자신의 가정을 자산군별 숫자로 기록할 수 있습니다. 저장한 시나리오는 포트폴리오 스트레스 테스트에서 선택할 수 있으며 브라우저의 localStorage에만 남습니다. 시나리오 이름과 충격률은 시장 전망이 아니라 사용자가 직접 만든 비교 조건입니다.</p></div></div>
+        <div class="calculator-card">
+          <form class="input-panel" id="custom-form"><label>시나리오 이름<input id="custom-name" type="text" maxlength="40" placeholder="예: 기술주 변동성 확대" data-save></label><div id="custom-shock-grid" class="form-grid two spacer-top"></div><div class="form-actions"><button class="button button-small button-primary" type="submit">시나리오 저장</button><button class="button button-small button-ghost" type="button" data-example="custom">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div></form>
+          <div class="result-panel"><div class="metric-grid two"><div class="metric"><span>평균 충격률</span><strong id="custom-average">-</strong></div><div class="metric"><span>가장 큰 충격 자산군</span><strong id="custom-largest">-</strong></div></div><h3>저장된 시나리오</h3><div id="custom-list" class="saved-list"></div><p class="result-note">커스텀 시나리오는 사용자가 직접 만든 가정입니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="risk-analyzer" aria-labelledby="risk-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">05</p><div><h2 id="risk-title">포트폴리오 위험 분석</h2><p>스트레스 테스트에 입력한 자산을 재사용해 집중도, 개별 자산, 레버리지, 기술 성장군, 방어 자산과 코인 노출을 수치로 정리합니다. 위험 점수는 자산의 우열을 판단하는 평가가 아니라 구성상 변동성 민감도가 어느 방향으로 나타나는지 비교하기 위한 자체 교육 지표입니다.</p></div></div>
+        <div class="wide-card">
+          <div class="score-layout"><div class="score-ring" id="risk-score-ring"><strong id="risk-score">0</strong><span>/ 100</span></div><div><p class="kicker">포트폴리오 위험 등급</p><h3 id="risk-grade">입력 대기</h3><p id="risk-summary" class="muted">스트레스 테스트에 자산을 입력하면 자동 분석됩니다.</p></div></div>
+          <div class="metric-grid four"><div class="metric"><span>상위 3개 집중도</span><strong id="risk-top3">-</strong></div><div class="metric"><span>개별주 비중</span><strong id="risk-individual">-</strong></div><div class="metric"><span>ETF 비중</span><strong id="risk-etf">-</strong></div><div class="metric"><span>레버리지 ETF 비중</span><strong id="risk-leverage">-</strong></div><div class="metric"><span>현금/채권 비중</span><strong id="risk-defensive">-</strong></div><div class="metric"><span>기술/성장군 비중</span><strong id="risk-tech">-</strong></div><div class="metric"><span>코인 비중</span><strong id="risk-crypto">-</strong></div><div class="metric"><span>분산도 점수</span><strong id="risk-diversification">-</strong></div></div>
+          <div id="risk-components" class="bar-list"></div>
+          <p class="interpretation">상위 3개 자산 비중이 높을수록 특정 종목 또는 섹터에 대한 의존도가 커질 수 있습니다. 레버리지 ETF 비중은 변동성 확대 구간에서 손실 민감도를 높일 수 있습니다.</p>
+          <p class="result-note">위험 점수는 이 사이트가 정한 단순 가중치에 따른 비교 지표입니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section alt" id="leverage" aria-labelledby="leverage-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">06</p><div><h2 id="leverage-title">레버리지 ETF 일간 복리 시뮬레이터</h2><p>레버리지 ETF는 기초자산의 장기 누적수익률이 아니라 일간 수익률의 배율을 목표로 하는 구조가 일반적입니다. 이 도구는 동일한 평균 수익률이라도 변동 경로에 따라 일별 복리 결과가 단순 배율과 달라질 수 있음을 보여줍니다. 경로는 선택한 교육용 시나리오에 따라 결정적으로 생성되며 무작위 예측을 사용하지 않습니다.</p></div></div>
+        <div class="calculator-card">
+          <form class="input-panel" id="leverage-form"><div class="form-grid two"><label>초기 투자금 (USD)<input id="lev-initial" type="number" min="0" value="10000" data-save></label><label>레버리지 배율<select id="lev-multiple" data-save><option value="2">2x</option><option value="3">3x</option><option value="-1">-1x</option><option value="-2">-2x</option><option value="-3">-3x</option></select></label><label>기초자산 일간 평균 수익률 (%)<input id="lev-mean" type="number" min="-20" max="20" step="0.01" value="0.03" data-save></label><label>일간 변동성 가정 (%)<input id="lev-vol" type="number" min="0" max="30" step="0.1" value="1.5" data-save></label><label>투자 기간 (일)<input id="lev-days" type="number" min="2" max="2000" value="252" data-save></label><label>경로 시나리오<select id="lev-scenario" data-save><option value="sideways">횡보장</option><option value="crash">급락 후 회복</option><option value="rise">완만한 상승</option><option value="volatile">고변동성 박스권</option></select></label></div><div class="form-actions"><button class="button button-small" type="button" data-example="leverage">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div></form>
+          <div class="result-panel"><div class="metric-grid four"><div class="metric"><span>기초자산 최종 금액</span><strong id="lev-underlying">-</strong></div><div class="metric"><span>단순 배율 비교값</span><strong id="lev-simple">-</strong></div><div class="metric"><span>일별 복리 적용 결과</span><strong id="lev-daily">-</strong></div><div class="metric"><span>두 방식의 차이</span><strong id="lev-gap">-</strong></div></div><div class="table-wrap"><table><thead><tr><th>기간</th><th>기초자산</th><th>단순 배율 비교값</th><th>일별 복리 결과</th></tr></thead><tbody id="lev-table"></tbody></table></div><p id="lev-explanation" class="interpretation"></p><p class="result-note">레버리지 ETF의 실제 비용, 추적오차와 거래 조건은 반영하지 않습니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="rebalancing" aria-labelledby="rebalance-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">07</p><div><h2 id="rebalance-title">리밸런싱 계산기</h2><p>현재 자산 금액과 사용자가 정한 목표 비중을 비교해 추가 투자금을 어떻게 배정하면 목표에 가까워지는지 계산합니다. 기존 자산 감액을 허용하지 않으면 부족한 항목에 추가 금액을 배분하고, 감액을 허용하면 목표 금액과의 차이를 증액 또는 감액 필요액으로 표시합니다. 결과는 실행 지시가 아닙니다.</p></div></div>
+        <div class="wide-card"><div class="toolbar wrap"><label>추가 투자금 (USD)<input id="rebalance-extra" type="number" min="0" value="5000" data-save></label><label class="check-label"><input id="rebalance-sell" type="checkbox" data-save> 기존 자산 감액 허용</label><button class="button button-small" id="rebalance-add" type="button">자산 행 추가</button><button class="button button-small button-ghost" id="rebalance-import" type="button">스트레스 입력 가져오기</button><button class="button button-small button-ghost" type="button" data-example="rebalancing">예시값 입력</button><button class="button button-small button-ghost" id="reset-rebalancing" type="button">초기화</button></div><div class="table-wrap input-table-wrap"><table class="input-table"><thead><tr><th>자산명</th><th>현재 금액</th><th>목표 비중 (%)</th><th><span class="sr-only">행 삭제</span></th></tr></thead><tbody id="rebalance-body"></tbody></table></div><div id="rebalance-warning" class="inline-warning" aria-live="polite"></div><div class="table-wrap"><table><thead><tr><th>자산</th><th>현재 비중</th><th>목표 비중</th><th>비중 차이</th><th>배정/조정 금액</th><th>계산 후 비중</th></tr></thead><tbody id="rebalance-result-body"></tbody></table></div><p class="result-note">표의 금액은 사용자 입력 목표 비중에 가까워지기 위한 산술적 배정값입니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p></div>
+      </div>
+    </section>
+
+    <section class="tool-section alt" id="fire" aria-labelledby="fire-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">08</p><div><h2 id="fire-title">은퇴 / FIRE 계산기</h2><p>현재 자산과 월 투자금이 입력한 수익률로 늘어난다고 가정하고, 연 생활비와 인출률로 계산한 은퇴 목표자산에 언제 도달하는지 월 단위로 시뮬레이션합니다. 물가상승률은 미래 생활비와 목표 금액을 높이는 방향으로 반영됩니다. 장기간의 일정 수익률 가정은 현실을 단순화한 비교 조건입니다.</p></div></div>
+        <div class="calculator-card"><form class="input-panel" id="fire-form"><div class="form-grid two"><label>현재 나이<input id="fire-age" type="number" min="18" max="90" value="35" data-save></label><label>현재 투자자산 (USD)<input id="fire-current" type="number" min="0" value="100000" data-save></label><label>월 투자금 (USD)<input id="fire-monthly" type="number" min="0" value="1000" data-save></label><label>연평균 수익률 가정 (%)<input id="fire-return" type="number" min="-20" max="30" step="0.1" value="7" data-save></label><label>은퇴 목표 연 생활비 (USD)<input id="fire-expense" type="number" min="0" value="40000" data-save></label><label>인출률 (%)<input id="fire-withdrawal" type="number" min="0.1" max="20" step="0.1" value="4" data-save></label><label>목표 금액 직접 입력 (선택, USD)<input id="fire-target-direct" type="number" min="0" value="0" data-save></label><label>연 물가상승률 가정 (%)<input id="fire-inflation" type="number" min="0" max="20" step="0.1" value="2.5" data-save></label></div><div class="form-actions"><button class="button button-small" type="button" data-example="fire">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div></form><div class="result-panel"><div class="metric-grid four"><div class="metric"><span>현재 기준 목표 은퇴자산</span><strong id="fire-target">-</strong></div><div class="metric"><span>목표 달성 예상 나이</span><strong id="fire-result-age">-</strong></div><div class="metric"><span>필요 기간</span><strong id="fire-years">-</strong></div><div class="metric"><span>총 투자원금 / 수익</span><strong id="fire-principal-profit">-</strong></div></div><div class="table-wrap"><table><thead><tr><th>수익률 가정</th><th>목표 달성 예상 나이</th><th>필요 기간</th><th>달성 시 자산</th></tr></thead><tbody id="fire-table"></tbody></table></div><p class="result-note">FIRE 계산은 사용자가 입력한 수익률, 생활비, 인출률 가정에 따라 크게 달라질 수 있습니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p></div></div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="risk-profile" aria-labelledby="profile-title">
+      <div class="container">
+        <div class="section-heading"><p class="section-number">09</p><div><h2 id="profile-title">위험성향 자가 점검</h2><p>투자 기간, 재무 완충력, 손실 감내 범위와 투자 경험에 관한 열 가지 질문을 통해 변동성 수용 성향을 교육용 점수로 정리합니다. 결과 유형은 개인의 적합성을 판정하거나 특정 자산 구성을 제안하지 않으며, 스스로 확인해야 할 위험 요인을 빠짐없이 살펴보기 위한 체크리스트입니다.</p></div></div>
+        <div class="calculator-card"><form class="input-panel profile-form" id="profile-form">
+          <label>1. 예상 투자 기간<select data-profile data-save><option value="0">3년 미만</option><option value="2">3~7년</option><option value="4">7~15년</option><option value="5">15년 이상</option></select></label>
+          <label>2. 생활비 기준 비상금 보유 수준<select data-profile data-save><option value="0">거의 없음</option><option value="2">약 3개월</option><option value="4">약 6개월</option><option value="5">12개월 이상</option></select></label>
+          <label>3. 고금리 부채 부담<select data-profile data-save><option value="0">부담이 큼</option><option value="2">일부 있음</option><option value="4">낮은 수준</option><option value="5">없음</option></select></label>
+          <label>4. 감내 가능하다고 생각하는 최대 손실<select data-profile data-save><option value="0">5% 미만</option><option value="2">10% 내외</option><option value="3">20% 내외</option><option value="4">30% 내외</option><option value="5">40% 이상</option></select></label>
+          <label>5. 큰 하락 구간에서 계획 유지 가능성<select data-profile data-save><option value="0">유지가 매우 어려움</option><option value="2">일부 축소 가능</option><option value="4">계획을 유지할 수 있음</option><option value="5">추가 투자 여력도 있음</option></select></label>
+          <label>6. 투자 경험<select data-profile data-save><option value="0">1년 미만</option><option value="2">1~3년</option><option value="4">3~7년</option><option value="5">7년 이상</option></select></label>
+          <label>7. 레버리지 ETF의 일간 재조정 이해도<select data-profile data-save><option value="0">잘 모름</option><option value="2">기본 개념만 이해</option><option value="4">위험과 구조를 이해</option><option value="5">경로별 손실 구조까지 이해</option></select></label>
+          <label>8. 소득 안정성<select data-profile data-save><option value="0">변동이 매우 큼</option><option value="2">다소 변동적</option><option value="4">대체로 안정적</option><option value="5">매우 안정적</option></select></label>
+          <label>9. 주된 투자 목적<select data-profile data-save><option value="0">단기 필요자금</option><option value="2">중기 목돈</option><option value="4">장기 자산 형성</option><option value="5">매우 장기적인 은퇴 준비</option></select></label>
+          <label>10. 손실 발생 시 예상 행동<select data-profile data-save><option value="0">즉시 중단할 가능성</option><option value="2">상당 부분 축소 가능성</option><option value="4">계획을 재검토 후 유지</option><option value="5">사전 기준에 따라 일관되게 대응</option></select></label>
+          <div class="form-actions"><button class="button button-small" type="button" data-example="profile">예시값 입력</button><button class="button button-small button-ghost" type="reset">초기화</button></div></form>
+          <div class="result-panel"><div class="score-layout"><div class="score-ring"><strong id="profile-score">0</strong><span>/ 100</span></div><div><p class="kicker">자가 점검 유형</p><h3 id="profile-type">Defensive</h3><p id="profile-description" class="muted"></p></div></div><div class="content-grid three"><article class="info-card"><h3>나타나는 강점</h3><p id="profile-strength"></p></article><article class="info-card"><h3>주의할 점</h3><p id="profile-caution"></p></article><article class="info-card"><h3>교육용 다음 단계</h3><p id="profile-next"></p></article></div><p class="result-note">이 검사는 금융상품 적합성 평가가 아니며 특정 종목, ETF 또는 비중을 제시하지 않습니다. 사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section alt" id="methodology" aria-labelledby="method-title">
+      <div class="container"><div class="section-heading"><p class="section-number">10</p><div><h2 id="method-title">계산 방법과 가정</h2><p>계산 결과를 해석하려면 결과를 만든 공식과 생략된 변수를 함께 이해해야 합니다. 아래 공식은 비교 가능한 시나리오를 만들기 위해 현실을 단순화합니다. 결과 숫자가 정밀해 보여도 입력 가정이 실제 미래를 정확히 나타낸다는 뜻은 아닙니다.</p></div></div><div class="content-grid two">
+        <article class="method-card"><h3>DCA 월복리</h3><p>연 수익률을 월 유효수익률로 변환한 뒤 매월 기존 잔액에 적용하고 월 투자금을 더합니다. 연도 경계에서 월 투자금 증가율을 반영합니다.</p><code>월 수익률 = (1 + 연 수익률)^(1/12) - 1</code></article>
+        <article class="method-card"><h3>하락 후 회복률</h3><p>하락 후 남은 비율의 역수를 사용합니다. 50% 하락 뒤 원금을 회복하려면 50%가 아니라 100% 상승이 필요합니다.</p><code>회복률 = 1 / (1 - 하락률) - 1</code></article>
+        <article class="method-card"><h3>스트레스 테스트</h3><p>각 자산의 보유 금액에 사용자가 선택하거나 수정한 충격률을 곱해 손익을 합산합니다. 자산 간 상관관계나 충격의 시간 순서는 모델링하지 않습니다.</p><code>시나리오 금액 = Σ 보유 금액 × (1 + 충격률)</code></article>
+        <article class="method-card"><h3>위험 점수</h3><p>상위 자산 집중도, 레버리지·기술 성장군·코인 노출은 점수를 높이고 현금·채권 노출과 자산 수에 따른 분산도는 완충 요소로 반영합니다. 이 사이트의 자체 비교 지표입니다.</p></article>
+        <article class="method-card"><h3>레버리지 일간 복리</h3><p>매일 생성된 기초자산 수익률에 선택 배율을 적용하고 일별로 복리 누적합니다. 단순 배율 비교값은 기초자산 전체 수익률에 배율을 한 번 적용합니다.</p><code>일별 잔액 = 이전 잔액 × (1 + 배율 × 일간 수익률)</code></article>
+        <article class="method-card"><h3>FIRE 목표 금액</h3><p>직접 입력한 목표가 없으면 연 생활비를 인출률로 나눕니다. 시뮬레이션 중 목표 금액은 물가상승률에 따라 증가합니다.</p><code>목표 금액 = 연 생활비 / 인출률</code></article>
+      </div><div class="warning-box"><h3>공통 한계</h3><p>세금, 거래비용, 수수료, 실제 시장의 불규칙한 변동, 환율 변화, 배당 재투자 시점, 슬리피지와 투자자별 재무 상황은 충분히 반영되지 않을 수 있습니다. 외부 API를 사용하지 않으므로 실시간 가격 데이터도 제공하지 않습니다. 모든 결과는 사용자의 입력값과 가정에 따른 계산입니다.</p></div></div>
+    </section>
+
+    <section class="content-section" id="disclaimer" aria-labelledby="disclaimer-title">
+      <div class="container narrow-content"><div class="section-heading"><p class="section-number">11</p><div><h2 id="disclaimer-title">투자 면책문구</h2><p>계산기를 사용하기 전에 아래 운영 목적과 책임 범위를 확인하세요. 이 안내는 모든 계산 도구와 설명 콘텐츠에 공통으로 적용됩니다.</p></div></div>
+        <div class="legal-card"><ul><li>본 웹사이트는 교육 및 정보 제공 목적의 계산 도구입니다.</li><li>본 웹사이트는 투자자문, 세무자문 또는 법률자문을 제공하지 않습니다.</li><li>계산 결과는 특정 증권의 매수, 매도 또는 보유 추천이 아닙니다.</li><li>과거 성과나 가정 수익률은 미래 결과를 보장하지 않습니다.</li><li>투자 결정과 그 결과는 사용자의 책임이며, 필요한 경우 등록된 전문가와 상담해야 합니다.</li><li>입력값은 서버로 전송되지 않으며 사용자가 저장 기능을 선택한 경우 브라우저 저장소에만 저장될 수 있습니다.</li></ul></div>
+        <div class="content-grid two spacer-top"><article class="info-card" id="privacy"><h3>개인정보 안내</h3><p>본 사이트는 서버, 회원 계정 또는 개인정보 수집 기능을 운영하지 않습니다. 사용자가 저장 버튼을 누르면 입력값과 커스텀 시나리오가 해당 브라우저의 localStorage에 저장될 수 있습니다. 브라우저 데이터를 삭제하면 저장값도 함께 삭제됩니다. 쿠키는 사용하지 않습니다.</p></article><article class="info-card" id="contact"><h3>문의</h3><p>기능 오류, 접근성 또는 계산 방식에 관한 의견은 <a href="mailto:contact@example.com">contact@example.com</a>으로 문의할 수 있습니다. 현재 주소는 운영 전 교체할 수 있는 예시 연락처입니다.</p></article></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container footer-grid"><div><strong>미국주식 리스크 계산기</strong><p>투자 가정을 검증하는 무료 교육용 정적 웹 도구</p></div><nav aria-label="하단 메뉴"><a href="#methodology">방법론</a><a href="#disclaimer">면책문구</a><a href="#privacy">개인정보 안내</a><a href="#contact">문의</a></nav></div><div class="container footer-notice">사용자가 입력한 가정에 따른 교육용 계산 결과이며 투자 조언이 아닙니다.</div></footer>
+</body>
+</html>
