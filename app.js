@@ -49,7 +49,8 @@
   const state = {
     portfolio: [],
     rebalancing: [],
-    customScenarios: []
+    customScenarios: [],
+    inputCurrency: "USD"
   };
 
   const byId = (id) => document.getElementById(id);
@@ -60,12 +61,65 @@
   };
   const classLabel = (id) => assetClasses.find((item) => item[0] === id)?.[1] || "기타";
 
-  // 사용자 입력은 달러로 유지하고 결과 표시 단계에서만 원화로 환산한다.
+  function exchangeRate() {
+    return Math.max(1, numberValue("exchange-rate", 1400));
+  }
+
+  function convertAmount(value, fromCurrency, toCurrency) {
+    const numeric = Number(value) || 0;
+    if (fromCurrency === toCurrency) return numeric;
+    const usd = fromCurrency === "KRW" ? numeric / exchangeRate() : numeric;
+    const converted = toCurrency === "KRW" ? usd * exchangeRate() : usd;
+    return toCurrency === "KRW" ? Math.round(converted) : Math.round(converted * 100) / 100;
+  }
+
+  function inputMoneyToUsd(value) {
+    return state.inputCurrency === "KRW" ? (Number(value) || 0) / exchangeRate() : Number(value) || 0;
+  }
+
+  function usdToInputMoney(value) {
+    return convertAmount(value, "USD", state.inputCurrency);
+  }
+
+  function moneyValue(id) {
+    return inputMoneyToUsd(numberValue(id));
+  }
+
+  function updateCurrencyUI() {
+    document.querySelectorAll(".currency-code").forEach((element) => { element.textContent = state.inputCurrency; });
+    document.querySelectorAll("[data-money-input]").forEach((input) => { input.step = state.inputCurrency === "KRW" ? "1000" : "1"; });
+    document.documentElement.dataset.currency = state.inputCurrency;
+  }
+
+  // 통화를 바꾸면 정적 입력과 동적 포트폴리오 금액을 함께 환산한다.
+  function changeInputCurrency(nextCurrency) {
+    const next = nextCurrency === "KRW" ? "KRW" : "USD";
+    const previous = state.inputCurrency;
+    if (previous !== next) {
+      document.querySelectorAll("[data-money-input]").forEach((input) => {
+        input.value = convertAmount(input.value, previous, next);
+      });
+      state.portfolio.forEach((item) => { item.amount = convertAmount(item.amount, previous, next); });
+      state.rebalancing.forEach((item) => { item.amount = convertAmount(item.amount, previous, next); });
+      state.inputCurrency = next;
+    }
+    byId("display-currency").value = next;
+    updateCurrencyUI();
+    renderPortfolio();
+    renderRebalancing();
+    calculateAll();
+  }
+
+  function restoreFormMoneyDefaults(form) {
+    form.querySelectorAll("[data-money-input]").forEach((input) => {
+      input.value = usdToInputMoney(Number(input.defaultValue) || 0);
+    });
+  }
+
   function formatMoney(usdValue) {
     if (!Number.isFinite(usdValue)) return "-";
-    const currency = byId("display-currency").value;
-    const rate = Math.max(1, numberValue("exchange-rate", 1400));
-    const value = currency === "KRW" ? usdValue * rate : usdValue;
+    const currency = state.inputCurrency;
+    const value = currency === "KRW" ? usdValue * exchangeRate() : usdValue;
     return new Intl.NumberFormat(currency === "KRW" ? "ko-KR" : "en-US", {
       style: "currency",
       currency,
@@ -130,18 +184,18 @@
   }
 
   function cloneExample(name) {
-    return portfolioExamples[name].map((item) => ({ ...item, shock: 0 }));
+    return portfolioExamples[name].map((item) => ({ ...item, amount: usdToInputMoney(item.amount), shock: 0 }));
   }
 
   // DCA 계산은 월말 납입과 월 유효수익률을 사용한다.
   function calculateDCA() {
-    const initial = Math.max(0, numberValue("dca-initial"));
-    const baseMonthly = Math.max(0, numberValue("dca-monthly"));
+    const initial = Math.max(0, moneyValue("dca-initial"));
+    const baseMonthly = Math.max(0, moneyValue("dca-monthly"));
     const years = clamp(Math.floor(numberValue("dca-years", 1)), 1, 60);
     const annualReturn = numberValue("dca-return") / 100;
     const inflation = Math.max(0, numberValue("dca-inflation")) / 100;
     const increase = Math.max(0, numberValue("dca-increase")) / 100;
-    const extra = Math.max(0, numberValue("dca-extra"));
+    const extra = Math.max(0, moneyValue("dca-extra"));
     const extraYear = clamp(Math.floor(numberValue("dca-extra-year", 1)), 1, years);
 
     if (annualReturn <= -1) return;
@@ -184,9 +238,9 @@
 
   // 낙폭과 회복률의 비대칭을 현재 금액 기준으로 계산한다.
   function calculateDrawdown() {
-    const current = Math.max(0, numberValue("dd-current"));
+    const current = Math.max(0, moneyValue("dd-current"));
     const rate = clamp(numberValue("dd-rate"), 0, 99.9) / 100;
-    const extra = Math.max(0, numberValue("dd-extra"));
+    const extra = Math.max(0, moneyValue("dd-extra"));
     const after = current * (1 - rate);
     const loss = current - after;
     const recovery = after > 0 ? current / after - 1 : Infinity;
@@ -268,7 +322,7 @@
       amount.min = "0";
       amount.value = item.amount;
       amount.dataset.field = "amount";
-      amount.setAttribute("aria-label", `${item.name || index + 1} 보유 금액`);
+      amount.setAttribute("aria-label", `${item.name || index + 1} 보유 금액 (${state.inputCurrency})`);
       amountCell.appendChild(amount);
       const classCell = document.createElement("td");
       const classSelect = buildAssetSelect(item.classId);
@@ -299,7 +353,7 @@
 
   // 입력된 보유 금액에 행별 충격률을 적용하고 손실 기여도를 합산한다.
   function calculateStress() {
-    const items = state.portfolio.map((item) => ({ ...item, amount: Math.max(0, Number(item.amount) || 0), shock: clamp(Number(item.shock) || 0, -100, 300) }));
+    const items = state.portfolio.map((item) => ({ ...item, amount: Math.max(0, inputMoneyToUsd(item.amount)), shock: clamp(Number(item.shock) || 0, -100, 300) }));
     const total = items.reduce((sum, item) => sum + item.amount, 0);
     const results = items.map((item) => {
       const after = item.amount * (1 + item.shock / 100);
@@ -439,7 +493,7 @@
   }
 
   function calculateLeverage() {
-    const initial = Math.max(0, numberValue("lev-initial"));
+    const initial = Math.max(0, moneyValue("lev-initial"));
     const multiple = numberValue("lev-multiple", 2);
     const mean = numberValue("lev-mean") / 100;
     const volatility = Math.max(0, numberValue("lev-vol")) / 100;
@@ -483,7 +537,7 @@
         if (type === "number") input.min = "0";
         input.value = value;
         input.dataset.field = field;
-        input.setAttribute("aria-label", `${item.name || index + 1} ${label}`);
+        input.setAttribute("aria-label", `${item.name || index + 1} ${label}${field === "amount" ? ` (${state.inputCurrency})` : ""}`);
         cell.appendChild(input);
         row.appendChild(cell);
       });
@@ -500,10 +554,10 @@
 
   // 목표 비중 합계가 100일 때만 배정 결과를 계산한다.
   function calculateRebalancing() {
-    const items = state.rebalancing.map((item) => ({ name: item.name, amount: Math.max(0, Number(item.amount) || 0), target: Math.max(0, Number(item.target) || 0) }));
+    const items = state.rebalancing.map((item) => ({ name: item.name, amount: Math.max(0, inputMoneyToUsd(item.amount)), target: Math.max(0, Number(item.target) || 0) }));
     const targetSum = items.reduce((sum, item) => sum + item.target, 0);
     const total = items.reduce((sum, item) => sum + item.amount, 0);
-    const extra = Math.max(0, numberValue("rebalance-extra"));
+    const extra = Math.max(0, moneyValue("rebalance-extra"));
     const finalTotal = total + extra;
     if (!items.length || Math.abs(targetSum - 100) > 0.05 || finalTotal <= 0) {
       setText("rebalance-warning", `목표 비중 합계를 100%로 맞춰 주세요. 현재 합계: ${targetSum.toFixed(1)}%`);
@@ -535,11 +589,11 @@
 
   function simulateFire(rate) {
     const age = clamp(numberValue("fire-age", 35), 18, 90);
-    let balance = Math.max(0, numberValue("fire-current"));
-    const monthly = Math.max(0, numberValue("fire-monthly"));
-    const expense = Math.max(0, numberValue("fire-expense"));
+    let balance = Math.max(0, moneyValue("fire-current"));
+    const monthly = Math.max(0, moneyValue("fire-monthly"));
+    const expense = Math.max(0, moneyValue("fire-expense"));
     const withdrawal = Math.max(0.001, numberValue("fire-withdrawal", 4) / 100);
-    const directTarget = Math.max(0, numberValue("fire-target-direct"));
+    const directTarget = Math.max(0, moneyValue("fire-target-direct"));
     const inflation = Math.max(0, numberValue("fire-inflation")) / 100;
     const baseTarget = directTarget > 0 ? directTarget : expense / withdrawal;
     const monthlyRate = rate <= -1 ? -1 : Math.pow(1 + rate, 1 / 12) - 1;
@@ -609,7 +663,7 @@
       const key = input.id || `anonymous-${index}`;
       inputs[key] = input.type === "checkbox" ? input.checked : input.value;
     });
-    return { inputs, portfolio: state.portfolio, rebalancing: state.rebalancing, customScenarios: state.customScenarios };
+    return { inputs, portfolio: state.portfolio, rebalancing: state.rebalancing, customScenarios: state.customScenarios, moneyInputCurrency: state.inputCurrency };
   }
 
   function saveAll(message = "입력값을 이 브라우저에 저장했습니다.") {
@@ -634,20 +688,22 @@
         if (showMessage) setText("storage-status", "저장된 입력값이 없습니다.");
         return false;
       }
+      const savedInputs = saved.inputs || {};
+      const storedCurrency = saved.moneyInputCurrency === "KRW" ? "KRW" : "USD";
+      const desiredCurrency = savedInputs["display-currency"] === "KRW" ? "KRW" : "USD";
+      state.inputCurrency = storedCurrency;
       state.customScenarios = Array.isArray(saved.customScenarios) ? saved.customScenarios : [];
       state.portfolio = Array.isArray(saved.portfolio) && saved.portfolio.length ? saved.portfolio : cloneExample("growth");
       state.rebalancing = Array.isArray(saved.rebalancing) && saved.rebalancing.length ? saved.rebalancing : defaultRebalancing();
       renderScenarioOptions();
-      renderPortfolio();
-      renderRebalancing();
-      renderCustomList();
       document.querySelectorAll("[data-save]").forEach((input, index) => {
         const key = input.id || input.dataset.storageKey || `anonymous-${index}`;
-        if (!(key in saved.inputs)) return;
-        if (input.type === "checkbox") input.checked = Boolean(saved.inputs[key]);
-        else input.value = saved.inputs[key];
+        if (!(key in savedInputs)) return;
+        if (input.type === "checkbox") input.checked = Boolean(savedInputs[key]);
+        else input.value = savedInputs[key];
       });
-      calculateAll();
+      renderCustomList();
+      changeInputCurrency(desiredCurrency);
       if (showMessage) setText("storage-status", "저장된 입력값을 불러왔습니다.");
       return true;
     } catch (error) {
@@ -658,15 +714,18 @@
 
   function defaultRebalancing() {
     return [
-      { name: "대형주 ETF", amount: 50000, target: 50 },
-      { name: "채권", amount: 25000, target: 30 },
-      { name: "현금", amount: 15000, target: 20 }
+      { name: "대형주 ETF", amount: usdToInputMoney(50000), target: 50 },
+      { name: "채권", amount: usdToInputMoney(25000), target: 30 },
+      { name: "현금", amount: usdToInputMoney(15000), target: 20 }
     ];
   }
 
   function resetAll() {
     localStorage.removeItem(STORAGE_KEY);
-    document.querySelectorAll("form").forEach((form) => form.reset());
+    document.querySelectorAll("form").forEach((form) => {
+      form.reset();
+      restoreFormMoneyDefaults(form);
+    });
     state.customScenarios = [];
     state.portfolio = cloneExample("growth");
     state.rebalancing = defaultRebalancing();
@@ -682,7 +741,7 @@
   function setValues(values) {
     Object.entries(values).forEach(([id, value]) => {
       const input = byId(id);
-      if (input) input.value = value;
+      if (input) input.value = input.hasAttribute("data-money-input") ? usdToInputMoney(value) : value;
     });
     calculateAll();
   }
@@ -697,8 +756,8 @@
     }
     if (name === "leverage") setValues({ "lev-initial": 10000, "lev-multiple": 3, "lev-mean": 0.03, "lev-vol": 2.2, "lev-days": 252, "lev-scenario": "volatile" });
     if (name === "rebalancing") {
-      state.rebalancing = [{ name: "주식 ETF", amount: 65000, target: 55 }, { name: "채권", amount: 20000, target: 25 }, { name: "현금", amount: 10000, target: 20 }];
-      byId("rebalance-extra").value = 5000;
+      state.rebalancing = [{ name: "주식 ETF", amount: usdToInputMoney(65000), target: 55 }, { name: "채권", amount: usdToInputMoney(20000), target: 25 }, { name: "현금", amount: usdToInputMoney(10000), target: 20 }];
+      byId("rebalance-extra").value = usdToInputMoney(5000);
       renderRebalancing();
       calculateRebalancing();
     }
@@ -718,7 +777,11 @@
     };
     document.addEventListener("input", schedule);
     document.addEventListener("change", schedule);
-    document.querySelectorAll("form").forEach((form) => form.addEventListener("reset", () => setTimeout(calculateAll, 0)));
+    document.querySelectorAll("form").forEach((form) => form.addEventListener("reset", () => setTimeout(() => {
+      restoreFormMoneyDefaults(form);
+      calculateAll();
+    }, 0)));
+    byId("display-currency").addEventListener("change", (event) => changeInputCurrency(event.target.value));
     byId("save-all").addEventListener("click", () => saveAll());
     byId("load-all").addEventListener("click", () => loadAll(true));
     byId("reset-all").addEventListener("click", resetAll);
@@ -802,7 +865,7 @@
     });
     byId("reset-rebalancing").addEventListener("click", () => {
       state.rebalancing = defaultRebalancing();
-      byId("rebalance-extra").value = 5000;
+      byId("rebalance-extra").value = usdToInputMoney(5000);
       byId("rebalance-sell").checked = false;
       renderRebalancing();
       calculateRebalancing();
@@ -826,6 +889,7 @@
 
   function initialize() {
     buildCustomGrid();
+    updateCurrencyUI();
     state.portfolio = cloneExample("growth");
     state.rebalancing = defaultRebalancing();
     try {
