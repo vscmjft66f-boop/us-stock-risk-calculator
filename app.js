@@ -18,6 +18,12 @@
     ["other", "기타"]
   ];
 
+  const storedMoneyInputIds = [
+    "dca-initial", "dca-monthly", "dca-extra", "dd-current", "dd-extra",
+    "lev-initial", "rebalance-extra", "fire-current", "fire-monthly",
+    "fire-expense", "fire-target-direct"
+  ];
+
   const builtInScenarios = {
     mild: { label: "Mild Correction", shocks: [-10, -15, -18, -10, -8, -20, -25, -2, 0, -12, -18, -8] },
     recession: { label: "Recession", shocks: [-25, -32, -40, -22, -20, -35, -55, 3, 0, -30, -45, -18] },
@@ -103,7 +109,7 @@
       state.rebalancing.forEach((item) => { item.amount = convertAmount(item.amount, previous, next); });
       state.inputCurrency = next;
     }
-    byId("display-currency").value = next;
+    if (byId("display-currency")) byId("display-currency").value = next;
     updateCurrencyUI();
     renderPortfolio();
     renderRebalancing();
@@ -149,6 +155,7 @@
 
   function replaceRows(bodyId, rows) {
     const body = byId(bodyId);
+    if (!body) return;
     const fragment = document.createDocumentFragment();
     rows.forEach((row) => fragment.appendChild(row));
     body.replaceChildren(fragment);
@@ -156,6 +163,7 @@
 
   function createBarList(containerId, items) {
     const container = byId(containerId);
+    if (!container) return;
     const fragment = document.createDocumentFragment();
     items.forEach(({ label, value, display }) => {
       const item = createElement("div", "bar-item");
@@ -285,6 +293,7 @@
 
   function renderScenarioOptions() {
     const select = byId("stress-scenario");
+    if (!select) return;
     const previous = select.value || "mild";
     const fragment = document.createDocumentFragment();
     Object.entries(builtInScenarios).forEach(([id, scenario]) => {
@@ -298,13 +307,16 @@
   }
 
   function applySelectedScenario() {
-    const map = getScenarioMap(byId("stress-scenario").value);
+    const select = byId("stress-scenario");
+    if (!select) return;
+    const map = getScenarioMap(select.value);
     if (!map) return;
     state.portfolio.forEach((item) => { item.shock = map[item.classId] ?? 0; });
   }
 
   function renderPortfolio() {
     const body = byId("portfolio-body");
+    if (!body) return;
     const fragment = document.createDocumentFragment();
     state.portfolio.forEach((item, index) => {
       const row = document.createElement("tr");
@@ -409,7 +421,7 @@
     setText("risk-tech", formatPercent(tech));
     setText("risk-crypto", formatPercent(crypto));
     setText("risk-diversification", `${Math.round(diversification)}점`);
-    byId("risk-score-ring").style.borderTopColor = score <= 25 ? "#117a55" : score <= 50 ? "#1769d2" : score <= 75 ? "#c47a10" : "#b33a42";
+    if (byId("risk-score-ring")) byId("risk-score-ring").style.borderTopColor = score <= 25 ? "#117a55" : score <= 50 ? "#1769d2" : score <= 75 ? "#c47a10" : "#b33a42";
     createBarList("risk-components", [
       { label: "집중도 점수", value: concentrationScore, display: `${Math.round(concentrationScore)}점` },
       { label: "방어자산 점수", value: defensiveScore, display: `${Math.round(defensiveScore)}점` },
@@ -420,6 +432,7 @@
 
   function buildCustomGrid() {
     const grid = byId("custom-shock-grid");
+    if (!grid) return;
     const fragment = document.createDocumentFragment();
     assetClasses.forEach(([id, label]) => {
       const wrapper = document.createElement("label");
@@ -453,6 +466,7 @@
 
   function renderCustomList() {
     const container = byId("custom-list");
+    if (!container) return;
     if (!state.customScenarios.length) {
       container.replaceChildren(createElement("p", "muted", "저장된 커스텀 시나리오가 없습니다."));
       return;
@@ -526,6 +540,7 @@
 
   function renderRebalancing() {
     const body = byId("rebalance-body");
+    if (!body) return;
     const fragment = document.createDocumentFragment();
     state.rebalancing.forEach((item, index) => {
       const row = document.createElement("tr");
@@ -646,24 +661,44 @@
   }
 
   function calculateAll() {
-    calculateDCA();
-    calculateDrawdown();
-    calculateStress();
-    updateCustomSummary();
-    calculateLeverage();
-    calculateRebalancing();
-    calculateFire();
-    calculateProfile();
+    if (byId("dca-form")) calculateDCA();
+    if (byId("drawdown-form")) calculateDrawdown();
+    if (byId("portfolio-body")) calculateStress();
+    if (byId("custom-shock-grid")) updateCustomSummary();
+    if (byId("leverage-form")) calculateLeverage();
+    if (byId("rebalance-body")) calculateRebalancing();
+    if (byId("fire-form")) calculateFire();
+    if (byId("profile-form")) calculateProfile();
   }
 
   // 정적 입력, 동적 포트폴리오와 커스텀 시나리오를 하나의 객체로 저장한다.
   function collectStorageData() {
+    let previous = {};
+    try {
+      previous = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (error) {
+      previous = {};
+    }
+    const previousCurrency = previous.moneyInputCurrency === "KRW" ? "KRW" : "USD";
+    const previousInputs = { ...(previous.inputs || {}) };
+    if (previousCurrency !== state.inputCurrency) {
+      storedMoneyInputIds.forEach((id) => {
+        if (id in previousInputs) previousInputs[id] = convertAmount(previousInputs[id], previousCurrency, state.inputCurrency);
+      });
+    }
     const inputs = {};
     document.querySelectorAll("[data-save]").forEach((input, index) => {
       const key = input.id || `anonymous-${index}`;
       inputs[key] = input.type === "checkbox" ? input.checked : input.value;
     });
-    return { inputs, portfolio: state.portfolio, rebalancing: state.rebalancing, customScenarios: state.customScenarios, moneyInputCurrency: state.inputCurrency };
+    const convertRows = (rows) => (Array.isArray(rows) ? rows.map((item) => ({ ...item, amount: convertAmount(item.amount, previousCurrency, state.inputCurrency) })) : []);
+    return {
+      inputs: { ...previousInputs, ...inputs },
+      portfolio: byId("portfolio-body") ? state.portfolio : convertRows(previous.portfolio),
+      rebalancing: byId("rebalance-body") ? state.rebalancing : convertRows(previous.rebalancing),
+      customScenarios: byId("custom-shock-grid") ? state.customScenarios : (Array.isArray(previous.customScenarios) ? previous.customScenarios : state.customScenarios),
+      moneyInputCurrency: state.inputCurrency
+    };
   }
 
   function saveAll(message = "입력값을 이 브라우저에 저장했습니다.") {
@@ -770,6 +805,10 @@
 
   function bindEvents() {
     let scheduled = false;
+    const on = (id, eventName, handler) => {
+      const element = byId(id);
+      if (element) element.addEventListener(eventName, handler);
+    };
     const schedule = () => {
       if (scheduled) return;
       scheduled = true;
@@ -781,20 +820,20 @@
       restoreFormMoneyDefaults(form);
       calculateAll();
     }, 0)));
-    byId("display-currency").addEventListener("change", (event) => changeInputCurrency(event.target.value));
-    byId("save-all").addEventListener("click", () => saveAll());
-    byId("load-all").addEventListener("click", () => loadAll(true));
-    byId("reset-all").addEventListener("click", resetAll);
+    on("display-currency", "change", (event) => changeInputCurrency(event.target.value));
+    on("save-all", "click", () => saveAll());
+    on("load-all", "click", () => loadAll(true));
+    on("reset-all", "click", resetAll);
 
-    byId("stress-scenario").addEventListener("change", () => { applySelectedScenario(); renderPortfolio(); calculateAll(); });
-    byId("add-portfolio-row").addEventListener("click", () => {
-      const map = getScenarioMap(byId("stress-scenario").value);
+    on("stress-scenario", "change", () => { applySelectedScenario(); renderPortfolio(); calculateAll(); });
+    on("add-portfolio-row", "click", () => {
+      const map = getScenarioMap(byId("stress-scenario")?.value || "mild");
       state.portfolio.push({ name: `자산 ${state.portfolio.length + 1}`, amount: 0, classId: "other", shock: map?.other || 0 });
       renderPortfolio();
       calculateAll();
     });
-    byId("reset-portfolio").addEventListener("click", () => {
-      byId("stress-scenario").value = "mild";
+    on("reset-portfolio", "click", () => {
+      if (byId("stress-scenario")) byId("stress-scenario").value = "mild";
       state.portfolio = cloneExample("growth");
       applySelectedScenario();
       renderPortfolio();
@@ -806,31 +845,31 @@
       renderPortfolio();
       calculateAll();
     }));
-    byId("portfolio-body").addEventListener("input", (event) => {
+    on("portfolio-body", "input", (event) => {
       const row = event.target.closest("tr");
       if (!row || !event.target.dataset.field) return;
       const item = state.portfolio[Number(row.dataset.index)];
       item[event.target.dataset.field] = event.target.dataset.field === "name" || event.target.dataset.field === "classId" ? event.target.value : Number(event.target.value);
       calculateAll();
     });
-    byId("portfolio-body").addEventListener("change", (event) => {
+    on("portfolio-body", "change", (event) => {
       const row = event.target.closest("tr");
       if (!row || event.target.dataset.field !== "classId") return;
       const item = state.portfolio[Number(row.dataset.index)];
       item.classId = event.target.value;
-      const map = getScenarioMap(byId("stress-scenario").value);
+      const map = getScenarioMap(byId("stress-scenario")?.value || "mild");
       if (map) item.shock = map[item.classId] || 0;
       renderPortfolio();
       calculateAll();
     });
-    byId("portfolio-body").addEventListener("click", (event) => {
+    on("portfolio-body", "click", (event) => {
       if (event.target.dataset.removePortfolio === undefined) return;
       state.portfolio.splice(Number(event.target.dataset.removePortfolio), 1);
       renderPortfolio();
       calculateAll();
     });
 
-    byId("custom-form").addEventListener("submit", (event) => {
+    on("custom-form", "submit", (event) => {
       event.preventDefault();
       const name = byId("custom-name").value.trim();
       if (!name) { setText("storage-status", "커스텀 시나리오 이름을 입력해 주세요."); return; }
@@ -839,12 +878,17 @@
       renderCustomList();
       saveAll("커스텀 시나리오를 저장했습니다.");
     });
-    byId("custom-list").addEventListener("click", (event) => {
+    on("custom-list", "click", (event) => {
       if (event.target.dataset.applyCustom) {
-        byId("stress-scenario").value = `custom:${event.target.dataset.applyCustom}`;
-        applySelectedScenario();
-        renderPortfolio();
-        calculateAll();
+        const stressSelect = byId("stress-scenario");
+        if (stressSelect) {
+          stressSelect.value = `custom:${event.target.dataset.applyCustom}`;
+          applySelectedScenario();
+          renderPortfolio();
+          calculateAll();
+        } else {
+          setText("storage-status", "저장했습니다. 스트레스 테스트 페이지에서 선택할 수 있습니다.");
+        }
       }
       if (event.target.dataset.deleteCustom) {
         state.customScenarios = state.customScenarios.filter((item) => item.id !== event.target.dataset.deleteCustom);
@@ -854,8 +898,9 @@
       }
     });
 
-    byId("rebalance-add").addEventListener("click", () => { state.rebalancing.push({ name: `자산 ${state.rebalancing.length + 1}`, amount: 0, target: 0 }); renderRebalancing(); calculateRebalancing(); });
-    byId("rebalance-import").addEventListener("click", () => {
+    on("rebalance-add", "click", () => { state.rebalancing.push({ name: `자산 ${state.rebalancing.length + 1}`, amount: 0, target: 0 }); renderRebalancing(); calculateRebalancing(); });
+    on("rebalance-import", "click", () => {
+      loadAll(false);
       const active = state.portfolio.filter((item) => Number(item.amount) > 0);
       const equal = active.length ? 100 / active.length : 0;
       state.rebalancing = active.map((item) => ({ name: item.name, amount: item.amount, target: Number(equal.toFixed(2)) }));
@@ -863,21 +908,21 @@
       renderRebalancing();
       calculateRebalancing();
     });
-    byId("reset-rebalancing").addEventListener("click", () => {
+    on("reset-rebalancing", "click", () => {
       state.rebalancing = defaultRebalancing();
       byId("rebalance-extra").value = usdToInputMoney(5000);
       byId("rebalance-sell").checked = false;
       renderRebalancing();
       calculateRebalancing();
     });
-    byId("rebalance-body").addEventListener("input", (event) => {
+    on("rebalance-body", "input", (event) => {
       const row = event.target.closest("tr");
       if (!row || !event.target.dataset.field) return;
       const item = state.rebalancing[Number(row.dataset.index)];
       item[event.target.dataset.field] = event.target.dataset.field === "name" ? event.target.value : Number(event.target.value);
       calculateRebalancing();
     });
-    byId("rebalance-body").addEventListener("click", (event) => {
+    on("rebalance-body", "click", (event) => {
       if (event.target.dataset.removeRebalance === undefined) return;
       state.rebalancing.splice(Number(event.target.dataset.removeRebalance), 1);
       renderRebalancing();

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://us-stock-risk-calculator.pages.dev/</loc>
-    <lastmod>2026-06-19</lastmod>
-  </url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/dca/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/drawdown/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/stress-test/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/scenario-builder/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/risk-analyzer/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/leverage-etf/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/rebalancing/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/fire/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/risk-profile/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/methodology/</loc><lastmod>2026-06-19</lastmod></url>
+  <url><loc>https://us-stock-risk-calculator.pages.dev/disclaimer/</loc><lastmod>2026-06-19</lastmod></url>
 </urlset>
