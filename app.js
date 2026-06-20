@@ -2,6 +2,17 @@
   "use strict";
 
   const STORAGE_KEY = "us-stock-risk-calculator-v1";
+  const toolNavigation = [
+    ["/dca/", "DCA 복리"],
+    ["/drawdown/", "하락 회복"],
+    ["/stress-test/", "스트레스 테스트"],
+    ["/scenario-builder/", "시나리오 빌더"],
+    ["/risk-analyzer/", "위험 분석"],
+    ["/leverage-etf/", "레버리지 ETF"],
+    ["/rebalancing/", "리밸런싱"],
+    ["/fire/", "은퇴/FIRE"],
+    ["/risk-profile/", "위험성향"]
+  ];
 
   const assetClasses = [
     ["large", "미국 대형주 ETF"],
@@ -95,6 +106,23 @@
     document.querySelectorAll(".currency-code").forEach((element) => { element.textContent = state.inputCurrency; });
     document.querySelectorAll("[data-money-input]").forEach((input) => { input.step = state.inputCurrency === "KRW" ? "1000" : "1"; });
     document.documentElement.dataset.currency = state.inputCurrency;
+  }
+
+  function renderToolNavigation() {
+    const currentPath = window.location.pathname.replace(/index\.html$/, "");
+    document.querySelectorAll(".tool-nav").forEach((nav) => {
+      const container = nav.querySelector(".tool-nav-scroll");
+      if (!container) return;
+      nav.setAttribute("aria-label", "주요 계산기 메뉴");
+      const fragment = document.createDocumentFragment();
+      toolNavigation.forEach(([href, label]) => {
+        const link = createElement("a", "", label);
+        link.href = href;
+        if (currentPath === href) link.setAttribute("aria-current", "page");
+        fragment.appendChild(link);
+      });
+      container.replaceChildren(fragment);
+    });
   }
 
   // 통화를 바꾸면 정적 입력과 동적 포트폴리오 금액을 함께 환산한다.
@@ -587,12 +615,9 @@
     } else {
       const deficits = items.map((item) => Math.max(0, finalTotal * item.target / 100 - item.amount));
       const deficitTotal = deficits.reduce((sum, value) => sum + value, 0);
-      if (deficitTotal >= extra && deficitTotal > 0) {
-        adjustments = deficits.map((value) => extra * value / deficitTotal);
-      } else {
-        const remainder = Math.max(0, extra - deficitTotal);
-        adjustments = deficits.map((value, index) => value + remainder * items[index].target / 100);
-      }
+      adjustments = deficitTotal > 0
+        ? deficits.map((value) => extra * value / deficitTotal)
+        : items.map(() => 0);
     }
     replaceRows("rebalance-result-body", items.map((item, index) => {
       const adjusted = allowReduction ? item.amount + adjustments[index] : item.amount + Math.max(0, adjustments[index]);
@@ -723,7 +748,12 @@
         if (showMessage) setText("storage-status", "저장된 입력값이 없습니다.");
         return false;
       }
-      const savedInputs = saved.inputs || {};
+      const savedInputs = { ...(saved.inputs || {}) };
+      // 구버전은 헤더 설정 두 개 뒤의 설문 응답을 anonymous-* 키로 저장했다.
+      document.querySelectorAll("[data-profile]").forEach((input, index) => {
+        const legacyKey = `anonymous-${index + 2}`;
+        if (!(input.id in savedInputs) && legacyKey in savedInputs) savedInputs[input.id] = savedInputs[legacyKey];
+      });
       const storedCurrency = saved.moneyInputCurrency === "KRW" ? "KRW" : "USD";
       const desiredCurrency = savedInputs["display-currency"] === "KRW" ? "KRW" : "USD";
       state.inputCurrency = storedCurrency;
@@ -761,6 +791,9 @@
       form.reset();
       restoreFormMoneyDefaults(form);
     });
+    if (byId("stress-scenario")) byId("stress-scenario").value = "mild";
+    if (byId("rebalance-extra")) byId("rebalance-extra").value = usdToInputMoney(Number(byId("rebalance-extra").defaultValue) || 0);
+    if (byId("rebalance-sell")) byId("rebalance-sell").checked = byId("rebalance-sell").defaultChecked;
     state.customScenarios = [];
     state.portfolio = cloneExample("growth");
     state.rebalancing = defaultRebalancing();
@@ -933,6 +966,7 @@
   }
 
   function initialize() {
+    renderToolNavigation();
     buildCustomGrid();
     updateCurrencyUI();
     state.portfolio = cloneExample("growth");
@@ -950,6 +984,7 @@
     renderCustomList();
     assignStorageKeys();
     bindEvents();
+    loadAll(false);
     calculateAll();
   }
 
